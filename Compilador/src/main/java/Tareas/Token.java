@@ -41,5 +41,4 @@ public class Token {
             this.patron = s;
         }
     }
-
 }

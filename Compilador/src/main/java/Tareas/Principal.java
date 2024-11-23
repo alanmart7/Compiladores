@@ -13,59 +13,24 @@ import Tareas.Token.Tipos;
 public class Principal {
     public static void main(String[] args) {
         String filePath = "C:/Analizador/fuente.json"; // Ruta de archivo de entrada
-        String outputFilePath = "C:/Analizador/salida.txt"; // Ruta del archivo de salida
+        String outputFilePath = "C:/Analizador/salida.xml"; // Ruta del archivo XML de salida
 
         try {
             String entrada = new String(Files.readAllBytes(Paths.get(filePath)));
             ArrayList<Token> tokens = lex(entrada);
-            
-            //Proceso de parser - Tarea 2
+
+            // Proceso de análisis sintáctico y traducción a XML
             Parser parser = new Parser(tokens);
             parser.parse();
-            
-            StringBuilder outputContent = new StringBuilder();
-            int indentLevel = 0;
 
-            for (int i = 0; i < tokens.size(); i++) {
-                Token token = tokens.get(i);
+            // Guardar la salida XML
+            String xmlOutput = parser.getXmlOutput();
+            Files.write(Paths.get(outputFilePath), xmlOutput.getBytes(), StandardOpenOption.CREATE);
 
-                if (token.getTipo() != null) {
-                    if (token.getTipo() == Tipos.L_LLAVE || token.getTipo() == Tipos.L_CORCHETE) {
-                        appendIndented(outputContent, token.getTipo().toString(), indentLevel);
-                        indentLevel++;
-                    } else if (token.getTipo() == Tipos.R_LLAVE || token.getTipo() == Tipos.R_CORCHETE) {
-                        indentLevel--;
-                        appendIndented(outputContent, token.getTipo().toString(), indentLevel);
-                    } else {
-                        appendIndentedSameLine(outputContent, token.getTipo().toString(), indentLevel);
-                    }
-                }
-            }
-
-            Files.write(Paths.get(outputFilePath), outputContent.toString().getBytes(), StandardOpenOption.CREATE);
-            System.out.println("\nAnálisis léxico completado. Los resultados se han guardado en " + outputFilePath);
+            System.out.println("Traducción completada. La salida XML se ha guardado en " + outputFilePath);
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private static void appendIndented(StringBuilder sb, String text, int indentLevel) {
-        if (sb.length() > 0 && sb.charAt(sb.length() - 1) != '\n') {
-            sb.append("\n");
-        }
-        for (int i = 0; i < indentLevel; i++) {
-            sb.append("  "); // Usar dos espacios para cada nivel de indentación
-        }
-        sb.append(text).append("\n");
-    }
-
-    private static void appendIndentedSameLine(StringBuilder sb, String text, int indentLevel) {
-        if (sb.length() > 0 && sb.charAt(sb.length() - 1) == '\n') {
-            for (int i = 0; i < indentLevel; i++) {
-                sb.append("  "); // Usar dos espacios para cada nivel de indentación
-            }
-        }
-        sb.append(text).append(" ");
     }
 
     private static ArrayList<Token> lex(String entrada) {

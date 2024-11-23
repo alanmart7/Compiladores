@@ -6,13 +6,20 @@ import java.util.Iterator;
 public class Parser {
     private Iterator<Token> tokens;
     private Token currentToken;
+    private StringBuilder xmlOutput;
+    private int indentLevel;
 
     public Parser(ArrayList<Token> tokens) {
         this.tokens = tokens.iterator();
+        this.xmlOutput = new StringBuilder();
+        this.indentLevel = 0;
         this.advance(); // Inicializa el primer token
     }
 
-    // Método principal para iniciar el análisis
+    public String getXmlOutput() {
+        return xmlOutput.toString();
+    }
+
     public void parse() {
         try {
             parseJson(); // Inicia desde la raíz del JSON
@@ -26,17 +33,6 @@ public class Parser {
         }
     }
 
-    // Avanza al siguiente token
-    private void advance() {
-        if (tokens.hasNext()) {
-            currentToken = tokens.next();
-        } else {
-            currentToken = new Token(); // Token EOF implícito si no hay más tokens
-            currentToken.setTipo(Token.Tipos.EOF);
-        }
-    }
-
-    // Método para validar la estructura JSON
     private void parseJson() {
         if (currentToken.getTipo() == Token.Tipos.L_LLAVE) {
             parseObject();
@@ -48,6 +44,9 @@ public class Parser {
     }
 
     private void parseObject() {
+        appendIndented("<object>");
+        indentLevel++;
+
         match(Token.Tipos.L_LLAVE);
 
         if (currentToken.getTipo() != Token.Tipos.R_LLAVE) {
@@ -55,6 +54,9 @@ public class Parser {
         }
 
         match(Token.Tipos.R_LLAVE);
+
+        indentLevel--;
+        //appendIndented("</object>");
     }
 
     private void parseMembers() {
@@ -68,15 +70,24 @@ public class Parser {
 
     private void parsePair() {
         if (currentToken.getTipo() == Token.Tipos.LITERAL_CADENA) {
+            String key = currentToken.getValue().replace("\"", "");
             match(Token.Tipos.LITERAL_CADENA);
             match(Token.Tipos.DOS_PUNTOS);
+
+            appendIndented("<" + key + ">");
+            indentLevel++;
             parseValue();
+            indentLevel--;
+            appendIndented("</" + key + ">");
         } else {
             throw new RuntimeException("Error: Se esperaba una cadena como clave del objeto JSON.");
         }
     }
 
     private void parseArray() {
+        appendIndented("<item>");
+        indentLevel++;
+
         match(Token.Tipos.L_CORCHETE);
 
         if (currentToken.getTipo() != Token.Tipos.R_CORCHETE) {
@@ -84,6 +95,9 @@ public class Parser {
         }
 
         match(Token.Tipos.R_CORCHETE);
+
+        indentLevel--;
+        appendIndented("</item>");
     }
 
     private void parseElements() {
@@ -108,6 +122,7 @@ public class Parser {
             case PR_TRUE:
             case PR_FALSE:
             case PR_NULL:
+                appendIndented(currentToken.getValue());
                 advance();
                 break;
             default:
@@ -115,7 +130,6 @@ public class Parser {
         }
     }
 
-    // Método para verificar y avanzar al siguiente token
     private void match(Token.Tipos expected) {
         if (currentToken.getTipo() == expected) {
             advance();
@@ -125,7 +139,22 @@ public class Parser {
         }
     }
 
-    // Método de sincronización para Panic Mode
+    private void advance() {
+        if (tokens.hasNext()) {
+            currentToken = tokens.next();
+        } else {
+            currentToken = new Token();
+            currentToken.setTipo(Token.Tipos.EOF);
+        }
+    }
+
+    private void appendIndented(String text) {
+        for (int i = 0; i < indentLevel; i++) {
+            xmlOutput.append("  ");
+        }
+        xmlOutput.append(text).append("\n");
+    }
+
     private void panicMode() {
         while (tokens.hasNext()) {
             advance();
@@ -138,4 +167,3 @@ public class Parser {
         }
     }
 }
-
