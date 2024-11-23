@@ -7,5 +7,6 @@ Una vez realizado esto simplemente ejecutar el programa y el archivo de salida s
 
 En caso de que el archivo JSON utilizado para la prueba cuente con errores sintacticos, se mostrara el error
 en la consola, asi como tambien se mostrara el mensaje que el JSON se encuentra sintacticamente correcto
-si es ese el caso. De igual manera, aunque el archivo cuente con errores sintacticos, el archivo de salida 
-sera generado en la misma ruta donde se deposito el archivo de entrada.
+si es ese el caso.
+
+El archivo traducido sera nombrado salida.xml y se enconntrara en el repositorio creado anteriormente
